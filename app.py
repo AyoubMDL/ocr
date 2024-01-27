@@ -2,30 +2,15 @@ import os
 import streamlit as st
 import pandas as pd
 from ocr import ocr_to_df
-import tkinter as tk
-from tkinter import filedialog
-
-
-def select_folder():
-    root = tk.Tk()
-    root.withdraw()
-    folder_path = filedialog.askdirectory(master=root)
-    root.destroy()
-    return folder_path
 
 
 def main():
     st.title("OCR Data Extraction App")
 
-    folder_path = st.session_state.get("folder_path", None)
-    folder_select_button = st.button("Select Folder")
-    if folder_select_button:
-        folder_path = select_folder()
+    folder_path = st.text_input("Enter the path to the folder of images:", key="folder_path")
 
     if folder_path and os.path.exists(folder_path) and os.path.isdir(folder_path):
-        image_files = [
-            f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ]
+        image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
 
         if not image_files:
             st.warning("No valid images found in the folder.")
