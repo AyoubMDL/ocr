@@ -10,22 +10,60 @@ pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 def img_to_txt(image_path):
     img = Image.open(image_path)
-    img = img.crop((280, 350, 1223, img.size[1]))
     text = pytesseract.image_to_string(img)
     return text
+
+
+def remove_digits(name):
+    # Check if the name contains digits
+    if any(char.isdigit() for char in name):
+        # Remove leading numeric prefix (enclosed in parentheses) and leading/trailing spaces
+        cleaned_name = ' '.join(part.strip() for part in name.split(' ')[1:])
+        return cleaned_name.strip()
+    else:
+        return name
+
+
+def remove_special_chars(input_string, special_chars="=,<>@:"):
+    return ''.join(char for char in input_string if char not in special_chars)
+
+
+def remove_prefix(name):
+    # Check if the name starts with two lowercase letters
+    if name[:2].islower() and len(name.split(" ")) >= 3:
+        # Remove the first two letters and leading/trailing spaces
+        cleaned_name = name[2:].strip()
+        return cleaned_name
+    else:
+        return name
+
+
+def clean_name(name):
+    name = remove_digits(name)
+    name = remove_prefix(name)
+    return name
 
 
 def extract_names(text):
     # Split the text into a list based on line breaks
     text_list = text.split('\n')
 
+    # Find the index of the item containing "Attendee Networking"
+    start_index = next(i for i, item in enumerate(text_list) if 'Attendee Networking' in item)
+
+    # Create a new list starting from that index
+    new_list = text_list[start_index+1:]
+
     # Remove empty strings from the new list
-    new_list = [item.strip() for item in text_list if item.strip()]
+    new_list = [item.strip() for item in new_list if item.strip()]
+    breakpoint()
+    new_list = [remove_special_chars(element) for element in new_list]
 
     names_list = [new_list[i] for i in range(0, len(new_list) - 1, 2)]
+    names_list = [clean_name(name) for name in names_list]
     first_names, last_names = get_first_last_names(names_list)
 
-    description_list = [new_list[i] for i in range(1, len(new_list), 2)]
+    description_list = [new_list[i] for i in range(1, len(new_list) - 1, 2)]
     company_names = get_company_names(description_list)
     role_names = get_role_names(description_list)
 
@@ -58,4 +96,6 @@ def ocr_to_df(image_path):
 
 
 if __name__ == "__main__":
-    text = img_to_txt("ocr_img/IMG_2828.png")
+    # df = ocr_to_df("ocr_img/IMG_2821.png")
+    print(img_to_txt("cropped_images/cropped_IMG_2822.png"))
+    # df.to_excel(f'test.xlsx', index=False)
